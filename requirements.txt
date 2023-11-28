@@ -1,0 +1,11 @@
+torch
+dash==2.9.2
+dash_bootstrap_components==1.4.1
+numpy==1.23.5
+plotly==5.9.0
+scikit_learn==1.2.2
+gunicorn
+pandas
+dash-tools
+werkzeug==2.0.3    
+markupsafe==2.0.1 

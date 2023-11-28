@@ -1,0 +1,1 @@
+eval——epoch: 100, accuracy: 0.6199376947040498, avg_loss: 193.83049928434838 ,avg_loss1: 193.8304307321757,avg_loss2: 6.85521770971175e-05, perturb_target_idx: 1, strength: 5
