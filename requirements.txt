@@ -1,4 +1,7 @@
 torch
+torchvision
+matplotlib
+tqdm
 dash==2.9.2
 dash_bootstrap_components==1.4.1
 numpy==1.23.5
