@@ -4,7 +4,7 @@ from XEdu.hub import Workflow as wf
 model = wf(task='MMEdu',checkpoint='model/Oracle.onnx')
 classes = ['人','大']
 
-def instruct_and_predict(instruction, input_img=None):
+def instruct_and_predict(instruction, input_img=None, input_audio=None):
     if input_img is None:
         return "", "请按照上方的指示开始绘图。"
     else:
@@ -28,9 +28,10 @@ Image_input = gr.Image(shape=(128, 128), source="canvas", label="画板")
 label_output1 = gr.Textbox(label="你画的甲骨文是")
 label_output2 = gr.Textbox(label="识别置信度是")
 Image_output = gr.Textbox(label="反馈")
+audio_input = gr.Audio(sources=["microphone"])
 
 demo = gr.Interface(fn=instruct_and_predict, 
-    inputs=[label_input,Image_input],
+    inputs=[label_input,Image_input,audio_input],
     outputs=[label_output1,label_output2,Image_output],
     live=False,
     title="甲骨文学习小游戏",
