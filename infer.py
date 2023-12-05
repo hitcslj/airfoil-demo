@@ -22,7 +22,7 @@ nameDict = [
     'suction crest location x-coordinate',
     'suction crest location y-coordinate',
     'curvatures at suction surface crest locations',
-    'angle of the suction surface at the trailing edge'
+    'angle of the suction surface at the trailing edge',
     'diff between gt and parsec airfoil'
 ]
 

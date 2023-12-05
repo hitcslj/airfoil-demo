@@ -91,20 +91,18 @@ class RequestApi(object):
 
 
 def audio2parsec(upload_file_path):
-    api = RequestApi(appid="74d744fa",
+  api = RequestApi(appid="74d744fa",
                   secret_key="752071b4b90c4406a05ad3bc78b100e7",
                   upload_file_path=upload_file_path)
-    result = api.get_result()
-    print(result)
-    # a = {'code': '000000', 'descInfo': 'success', 'content': {'orderInfo': {'orderId': 'DKHJQ20231123152123018QwfNRLGkU9KkOcGT', 'failType': 11, 'status': -1, 'originalDuration': 200, 'realDuration': 3326, 'expireTime': 1700983169789}, 'orderResult': '{"lattice":[{"json_1best":"{\\"st\\":{\\"sc\\":\\"0.00\\",\\"pa\\":\\"0\\",\\"rt\\":[{\\"ws\\":[{\\"cw\\":[{\\"w\\":\\"前缘\\",\\"wp\\":\\"n\\",\\"wc\\":\\"0.0000\\"}],\\"wb\\":5,\\"we\\":92},{\\"cw\\":[{\\"w\\":\\"半径\\",\\"wp\\":\\"n\\",\\"wc\\":\\"0.0000\\"}],\\"wb\\":93,\\"we\\":148},{\\"cw\\":[{\\"w\\":\\"增加\\",\\"wp\\":\\"n\\",\\"wc\\":\\"0.0000\\"}],\\"wb\\":149,\\"we\\":204},{\\"cw\\":[{\\"w\\":\\"时\\",\\"wp\\":\\"n\\",\\"wc\\":\\"0.0000\\"}],\\"wb\\":205,\\"we\\":276},{\\"cw\\":[{\\"w\\":\\"。\\",\\"wp\\":\\"p\\",\\"wc\\":\\"0.0000\\"}],\\"wb\\":276,\\"we\\":276},{\\"cw\\":[{\\"w\\":\\"\\",\\"wp\\":\\"g\\",\\"wc\\":\\"0.0000\\"}],\\"wb\\":276,\\"we\\":276}]}],\\"bg\\":\\"130\\",\\"rl\\":\\"0\\",\\"ed\\":\\"2920\\"}}"}],"lattice2":[{"lid":"0","end":"2920","begin":"130","json_1best":{"st":{"sc":"0.00","pa":"0","rt":[{"nb":"1","nc":"1.0","ws":[{"cw":[{"w":"前缘","wp":"n","wc":"0.0000"}],"wb":5,"we":92},{"cw":[{"w":"半径","wp":"n","wc":"0.0000"}],"wb":93,"we":148},{"cw":[{"w":"增加","wp":"n","wc":"0.0000"}],"wb":149,"we":204},{"cw":[{"w":"时","wp":"n","wc":"0.0000"}],"wb":205,"we":276},{"cw":[{"w":"。","wp":"p","wc":"0.0000"}],"wb":276,"we":276},{"cw":[{"w":"","wp":"g","wc":"0.0000"}],"wb":276,"we":276}]}],"pt":"reserved","bg":"130","si":"0","rl":"0","ed":"2920"}},"spk":"段落-0"}]}', 'taskEstimateTime': 0}}
-    s = json.loads(json.loads(result['content']['orderResult'])['lattice'][0]['json_1best'])['st']['rt'][0]['ws']
-    prompt = ''
-    equal = ''
-    for i in s:
-        # print(i['cw'][0]['w'])
-        prompt += i['cw'][0]['w']
-    print(prompt)
-    # parsec = {'前缘半径':0,}
-    # plus_minus = {"增加" : '+',}
-    return prompt
+
+  result = api.get_result()
+  ss = json.loads(result['content']['orderResult'])['lattice']
+  prompt = ''
+  equal = ''
+  for s in ss:
+      s = json.loads(s['json_1best'])['st']['rt'][0]['ws']
+      for i in s:
+          prompt += i['cw'][0]['w']
+  print(prompt)
+  return prompt
     

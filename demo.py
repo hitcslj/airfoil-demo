@@ -10,53 +10,38 @@ from scipy.io.wavfile import write
 from audio_api import audio2parsec 
 
 
-A4 = 440
-C0 = A4 * pow(2, -4.75)
-name = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
 
-def get_pitch(freq):
-    h = round(12 * log2(freq / C0))
-    n = h % 12
-    return name[n]
-
-
-def main_note(audio):
+def main_note(audio,input_image):
     rate, y = audio
     write("output.wav", rate, y)
     prompt = audio2parsec("output.wav")
+    return input_image,prompt
 
 
-    if len(y.shape) == 2:
-        y = y.T[0]
-    N = len(y)
-    T = 1.0 / rate
-    yf = fft(y)
-    yf2 = 2.0 / N * np.abs(yf[0 : N // 2])
-    xf = np.linspace(0.0, 1.0 / (2.0 * T), N // 2)
+airfoil_point_input = []
+airfoil_point_output = []
 
-    volume_per_pitch = {}
-    total_volume = np.sum(yf2)
-    for freq, volume in zip(xf, yf2):
-        if freq == 0:
-            continue
-        pitch = get_pitch(freq)
-        if pitch not in volume_per_pitch:
-            volume_per_pitch[pitch] = 0
-        volume_per_pitch[pitch] += 1.0 * volume / total_volume
-    volume_per_pitch = {k: float(v) for k, v in volume_per_pitch.items()}
-    return volume_per_pitch,prompt
 
+# demo = gr.Interface(
+#     main_note,
+#     inputs=[gr.Audio(sources=["microphone","upload"],format="wav"),gr.Image(height=200,width=200)],
+#     outputs=[gr.Image(height=200,width=200),gr.Textbox()],
+#     # examples=[
+#     #     ["output.wav","data/airfoil/picked_uiuc_img/2032c.png"],
+#     #     ["data/airfoil/picked_uiuc_img/2032c.png","2"],
+#     # ],
+# )
+
+def fn(input_image):
+    return input_image
 
 demo = gr.Interface(
-    main_note,
-    inputs=[gr.Audio(sources=["microphone"],format="wav")],
-    outputs=[gr.Label(num_top_classes=4),gr.Textbox()]
-    # examples=[
-    #     [os.path.join(os.path.dirname(__file__),"audio/recording1.wav")],
-    #     [os.path.join(os.path.dirname(__file__),"audio/cantina.wav")],
-    # ],
+    fn,
+    inputs=[gr.Image()],
+    outputs=[gr.Image()],
 )
+
 
 if __name__ == "__main__":
     demo.launch()
