@@ -23,24 +23,24 @@ airfoil_point_input = []
 airfoil_point_output = []
 
 
-# demo = gr.Interface(
-#     main_note,
-#     inputs=[gr.Audio(sources=["microphone","upload"],format="wav"),gr.Image(height=200,width=200)],
-#     outputs=[gr.Image(height=200,width=200),gr.Textbox()],
-#     # examples=[
-#     #     ["output.wav","data/airfoil/picked_uiuc_img/2032c.png"],
-#     #     ["data/airfoil/picked_uiuc_img/2032c.png","2"],
-#     # ],
-# )
-
-def fn(input_image):
-    return input_image
-
 demo = gr.Interface(
-    fn,
-    inputs=[gr.Image()],
-    outputs=[gr.Image()],
+    main_note,
+    inputs=[gr.Audio(sources=["microphone","upload"],format="wav"),gr.Image(height=200,width=200)],
+    outputs=[gr.Image(height=200,width=200),gr.Textbox()],
+    # examples=[
+    #     ["output.wav","data/airfoil/picked_uiuc_img/2032c.png"],
+    #     ["data/airfoil/picked_uiuc_img/2032c.png","2"],
+    # ],
 )
+
+# def fn(input_image):
+#     return input_image
+
+# demo = gr.Interface(
+#     fn,
+#     inputs=[gr.Image()],
+#     outputs=[gr.Image()],
+# )
 
 
 if __name__ == "__main__":

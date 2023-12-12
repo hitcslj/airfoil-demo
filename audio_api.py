@@ -104,5 +104,5 @@ def audio2parsec(upload_file_path):
       for i in s:
           prompt += i['cw'][0]['w']
   print(prompt)
-  return prompt
+  return {"leading edge radius":2}
     

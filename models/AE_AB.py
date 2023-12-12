@@ -18,8 +18,9 @@ class AE_AB(nn.Module):
         return target_params_pred,target_point_pred
 
 
-    def editing_param(self,source_keypoint,source_params,perturb_target_idx=None,strength=0.1): # y就是物理参数
-        if perturb_target_idx is not None:
-            source_params[:,perturb_target_idx] *= (1+strength)
-        target_point_pred = self.modelB(source_keypoint,source_params) 
+    def editing_param(self,source_keypoint,source_params,parmas=None): # y就是物理参数
+        for i,strength in enumerate(parmas):
+           source_params[:,i] *= (1+strength)
+        source_params_ = source_params.expand(-1,-1,2)
+        target_point_pred = self.modelB(source_keypoint,source_params_) 
         return source_params,target_point_pred
