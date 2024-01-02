@@ -15,17 +15,56 @@ def airfoil2img(txt_path):
     img = point2img(data)
     # save the binary image
     name = txt_path.split('/')[-1].split('.')[0]
-    file_path = 'data/airfoil/picked_uiuc_keypoint/' + name + '.png'
+    file_path = 'data/airfoil/picked_uiuc/' + name + '.png'
     plt.imsave(file_path, img, cmap='gray')
     return img
+
+def airfoil2imgScale(txt_path):
+    data = get_point(txt_path)['full'] # (200,2)
+    ## 将data可视化，要求x,y尺度一致
+    plt.plot(data[:,0], data[:,1])
+    plt.gca().set_aspect('equal', adjustable='box')
+    # 去除坐标轴
+    plt.xticks([])
+    plt.yticks([])
+
+    # remove box, and save img
+    plt.box(False)
+    name = txt_path.split('/')[-1].split('.')[0]
+    file_path = 'data/airfoil/picked_uiuc_img/' + name + '.png'
+    plt.savefig(file_path, dpi=100, bbox_inches='tight', pad_inches=0.0)
+    # Clear the plot cache
+    plt.clf()
+    # plt.show()
+ 
+ 
+
+
+def point2img_new(data):
+    ## 将data可视化，要求x,y尺度一致
+    plt.plot(data[:,0], data[:,1])
+    plt.gca().set_aspect('equal', adjustable='box')
+    # 去除坐标轴
+    plt.xticks([])
+    plt.yticks([])
+
+    # remove box, and save img
+    plt.box(False)
+     
+    file_path = 'output.png'
+    plt.savefig(file_path, dpi=100, bbox_inches='tight', pad_inches=0.0)
+    # Clear the plot cache
+    plt.clf()
+
 
 def point2img(data):
     # Normalize the coordinates
     data[:, 0] = (data[:, 0] - min(data[:, 0])) / (max(data[:, 0]) - min(data[:, 0]))
     data[:, 1] = (data[:, 1] - min(data[:, 1])) / (max(data[:, 1]) - min(data[:, 1]))
 
+    data[:,1] /= 5
     # Create a 200x200 binary image
-    img = np.zeros((200, 200))
+    img = np.zeros((40, 200))
 
     # Map the normalized coordinates to the image grid
     x_indices = (data[:, 0] * 199).astype(int)
@@ -33,7 +72,10 @@ def point2img(data):
 
     # Set the corresponding pixels to 1
     img[y_indices, x_indices] = 255
-    img[y_indices[::10],x_indices[::10]] = 20
+    # img[y_indices[::10],x_indices[::10]] = 20
+
+    # 将图像外围padding
+    img = np.pad(img, ((10, 10), (10, 10)), 'constant', constant_values=(0, 0))
     return img
 
 def get_path(root_path):
@@ -94,4 +136,4 @@ if __name__ == '__main__':
 
   ## 并行处理allData中的文件
   with Pool(processes=8) as pool:
-      pool.map(airfoil2img, file_paths)
+      pool.map(airfoil2imgScale, file_paths)

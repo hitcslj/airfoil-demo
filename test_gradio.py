@@ -1,31 +1,27 @@
-import gradio as gr 
-import pandas as pd 
-from skimage import data
-from PIL import Image
-from models import AE_AB,AE_A_variable,AE_B_Attention
-import torch
-
- 
-modelA = AE_A_variable()
-modelB = AE_B_Attention()
-model = AE_AB(modelA,modelB)
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model.to(device)
-checkpoint = torch.load('weights/logs_edit_AB/cond_ckpt_epoch_100.pth', map_location='cpu')
-model.load_state_dict(checkpoint['model'], strict=True)
-model.eval()
+import gradio as gr
+import time
 
 
+def sleep(im):
+    time.sleep(5)
+    return [im["background"], im["layers"][0], im["composite"]]
 
-def predict(img):
-    result = model.predict(source=img)
-    df = pd.Series(result[0].names).to_frame()
-    df.columns = ['names']
-    df['probs'] = result[0].probs
-    df = df.sort_values('probs',ascending=False)
-    res = dict(zip(df['names'],df['probs']))
-    return res
-gr.close_all() 
-demo = gr.Interface(fn = predict,inputs =[],outputs=[], 
-                     )
-demo.launch()
+
+with gr.Blocks() as demo:
+    im = gr.ImageEditor(
+        type="pil",
+        crop_size="1:1",
+    )
+
+    with gr.Group():
+        with gr.Row():
+            im_out_1 = gr.Image(type="pil")
+            im_out_2 = gr.Image(type="pil")
+            im_out_3 = gr.Image(type="pil")
+
+    btn = gr.Button()
+    im.change(sleep, outputs=[im_out_1, im_out_2, im_out_3], inputs=im)
+
+if __name__ == "__main__":
+    demo.launch(share=True)
+

@@ -103,6 +103,6 @@ def audio2parsec(upload_file_path):
       s = json.loads(s['json_1best'])['st']['rt'][0]['ws']
       for i in s:
           prompt += i['cw'][0]['w']
-  print(prompt)
+  print(prompt) # 目前prompt识别出来的文字非常糟糕，接口暂时是写死的，后续可以考虑用别人的语音接口+字符串匹配规则
   return {"leading edge radius":2}
     
