@@ -24,3 +24,16 @@ class AE_AB(nn.Module):
         source_params_ = source_params.expand(-1,-1,2)
         target_point_pred = self.modelB(source_keypoint,source_params_) 
         return source_params,target_point_pred
+    
+    def editing_point(self,source_keypoint,source_params,point1=None,point2=None): # y就是物理参数
+        target_keypoint = source_keypoint.clone()
+        # target_keypoint.shape  (1,20,2)
+
+        # target_keypoint[:,point1[0],0] += point1[1]
+
+        target_params_pred = self.modelA(source_keypoint,target_keypoint,source_params)
+        target_params_pred_ = target_params_pred.expand(-1,-1,2)
+
+        target_point_pred = self.modelB(target_keypoint,target_params_pred_) 
+        return target_params_pred,target_point_pred
+

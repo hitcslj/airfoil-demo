@@ -2,9 +2,12 @@ import gradio as gr
 import numpy as np
 from PIL import Image, ImageDraw
 
+
+# 我不需要在source 和 target 之间画线， 只需要捕获source , target对应点的坐标即可。
+
 from gradio.events import Dependency
 
-class ImageMask(gr.ImageEditor):
+class ImageMask(gr.components.Image):
     """
     Sets: source="canvas", tool="sketch"
     """
@@ -12,15 +15,15 @@ class ImageMask(gr.ImageEditor):
     is_template = True
 
     def __init__(self, **kwargs):
-        super().__init__(sources="upload",
-                        #  tool="sketch",
+        super().__init__(source="upload",
+                         tool="sketch",
                          interactive=False,
                          **kwargs)
 
     def preprocess(self, x):
         if x is None:
             return x
-        if  self.source in ["upload", "webcam"
+        if self.tool == "sketch" and self.source in ["upload", "webcam"
                                                      ] and type(x) != dict:
             decode_image = gr.processing_utils.decode_base64_to_image(x)
             width, height = decode_image.size

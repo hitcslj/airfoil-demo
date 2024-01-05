@@ -127,7 +127,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
     with gr.Row():
       # img = ImageMask()  # NOTE: hard image size code here.
       # img_out = gr.ImageEditor(label="Output Image")
-      img = gr.Image(label="Input Image")
+      img_in = gr.Image(label="Input Image")
       img_out = gr.Image(label="Output Image")
     with gr.Row():
         with gr.Row():
@@ -138,23 +138,23 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             idx = gr.Number(value = 1,label='cur idx')
     # 新建一个button, 执行input_image，得到output_image
     submit_button = gr.Button("infer")
-    ips = [img,idx,slider0,slider1,slider2,slider3,slider4,slider5,slider6,slider7,slider8,slider9]
+    ips = [img_in,idx,slider0,slider1,slider2,slider3,slider4,slider5,slider6,slider7,slider8,slider9]
     submit_button.click(infer,
                         inputs=ips,
                         outputs=[img_out])
     bn_before.click(fn_before,
                     inputs=[idx],
-                    outputs=[idx,img])
+                    outputs=[idx,img_in])
     bn_samlpe.click(fn_sample,
                 inputs=[idx],
-                outputs=[idx,img])
+                outputs=[idx,img_in])
     bn_next.click(fn_next,
                   inputs=[idx],
-                  outputs=[idx,img])
+                  outputs=[idx,img_in])
     gr.Markdown("## Airfoil Examples")
     gr.Examples(
         examples=['data/airfoil/picked_uiuc_img/2032c.png'],
-        inputs=[img]
+        inputs=[img_in]
      )
 if __name__=="__main__":
-  demo.queue().launch(share=False)
+  demo.queue().launch(share=True)
