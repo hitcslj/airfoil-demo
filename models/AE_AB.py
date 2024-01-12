@@ -20,13 +20,15 @@ class AE_AB(nn.Module):
 
     def editing_param(self,source_keypoint,source_params,parmas=None): # y就是物理参数
         for i,strength in enumerate(parmas):
-           source_params[:,i] *= (1+strength)
+           source_params[:,i] *= strength
         source_params_ = source_params.expand(-1,-1,2)
         target_point_pred = self.modelB(source_keypoint,source_params_) 
         return source_params,target_point_pred
     
     def editing_point(self,source_keypoint,source_params,point1=None,point2=None): # y就是物理参数
         target_keypoint = source_keypoint.clone()
+        point1 /= 600
+        point2 /= 600
         # target_keypoint.shape  (1,20,2)
 
         # target_keypoint[:,point1[0],0] += point1[1]
