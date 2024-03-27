@@ -8,12 +8,16 @@ import time
 import requests
 import urllib
 import random
+import xpinyin
+from xpinyin import Pinyin
+import re
 
 lfasr_host = 'https://raasr.xfyun.cn/v2/api'
 # 请求的接口名
 api_upload = '/upload'
 api_get_result = '/getResult'
-import re
+p = Pinyin()
+
 
 def chinese_to_arabic(cn_num):
   cn_num_dict = {
@@ -25,11 +29,37 @@ def chinese_to_arabic(cn_num):
   return cn_num_dict.get(cn_num, 0) 
 
 physical_quantities = {
-  "前缘半径": ["前沿半径", "前缘半径", "边缘半径","前圆半径","前额半径"],
-  "上表面峰值": ["上表面风值","上等的峰值","受表面峰值","上半年峰值"],
+  "前缘半径": ["前沿半径", "前缘半径", "边缘半径","前圆半径","前额半径","迁移半径"],
+  "上表面峰值": ["上表面风值","上等的峰值","受表面峰值","上半年峰值","尚表面峰值"],
   "下表面峰值": ["下表面风值", "底部峰值"],
   "后缘角": ["后元角", "后圆角", "后源角", "后原角", "后远角", "后员角","后眼角"]
 }
+
+def check(candidate,prompt_pinyin):
+    i = 0
+    for c in prompt_pinyin:
+        if i<len(candidate) and c==candidate[i]:
+            i+=1
+    return i/len(candidate)
+          
+        
+
+def process_pingyin(prompt_pinyin):
+    # 判断
+    a = check('qian-yuan-bang-jing',prompt_pinyin)
+    b = check('shang-biao-mian-feng-zhi',prompt_pinyin)
+    c = check('xia-biao-mian-feng-zhi',prompt_pinyin)
+    d = check('hou-yuan-jiao',prompt_pinyin)
+    ## 找到在s中匹配最成功的率
+    cur = max(a,b,c,d)
+    if a==cur:
+        return '前缘半径'
+    elif b==cur:
+        return '上表面峰值'
+    elif c==cur:
+        return '下表面峰值'
+    else:
+        return '后缘角'
 
 def process_text(text):
   results = {
@@ -53,8 +83,8 @@ def process_text(text):
                       except ValueError:
                           arabic_num = chinese_to_arabic(num[0])
                       #operation = operations[operation]
-                      print(arabic_num, operation, correct)
-                      print(operations[operation] == "+")
+                      # print(arabic_num, operation, correct)
+                      # print(operations[operation] == "+")
                       if operations[operation] == "+":
                           results[correct] += arabic_num
                       else:
@@ -86,7 +116,6 @@ class RequestApi(object):
 
 
     def upload(self):
-        print("上传部分：")
         upload_file_path = self.upload_file_path
         file_len = os.path.getsize(upload_file_path)
         file_name = os.path.basename(upload_file_path)
@@ -98,14 +127,10 @@ class RequestApi(object):
         param_dict["fileSize"] = file_len
         param_dict["fileName"] = file_name
         param_dict["duration"] = "200"
-        print("upload参数：", param_dict)
         data = open(upload_file_path, 'rb').read(file_len)
-        print(data)
         response = requests.post(url =lfasr_host + api_upload+"?"+urllib.parse.urlencode(param_dict),
                                 headers = {"Content-type":"application/json"},data=data)
-        print("upload_url:",response.request.url)
         result = json.loads(response.text)
-        print("upload resp:", result)
         return result
 
 
@@ -118,31 +143,26 @@ class RequestApi(object):
         param_dict['ts'] = self.ts
         param_dict['orderId'] = orderId
         param_dict['resultType'] = "transfer,predict"
-        print("")
-        print("查询部分：")
-        print("get result参数：", param_dict)
         status = 3
         # 建议使用回调的方式查询结果，查询接口有请求频率限制
         while status == 3:
             response = requests.post(url=lfasr_host + api_get_result + "?" + urllib.parse.urlencode(param_dict),
                                      headers={"Content-type": "application/json"})
-            # print("get_result_url:",response.request.url)
             result = json.loads(response.text)
-            # print(result)
             status = result['content']['orderInfo']['status']
-            print("status=",status)
             if status == 4:
                 break
             time.sleep(5)        
-        print("get_result resp:",result)
         return result
 
 
 
 def audio2parsec(upload_file_path):
+  t1 = time.time()
   api = RequestApi(appid="74d744fa",
                   secret_key="752071b4b90c4406a05ad3bc78b100e7",
                   upload_file_path=upload_file_path)
+  t2 = time.time() - t1
 
   result = api.get_result()
   ss = json.loads(result['content']['orderResult'])['lattice']
@@ -160,49 +180,18 @@ def audio2parsec(upload_file_path):
   for key, value in results.items():
       if value != 0:
         return key,value
-  return '你好，可以说的再清楚一些么?',-1
-  
-
-
-  # def check(ss):
-  #     for s in ss:
-  #         if s in prompt:
-  #             return s[0]
-  #     return False
-
-  # def prompt2param():
-  #   a = ['前缘半径','前沿半径']
-  #   b = ['上表面峰值']
-  #   c = ['下表面峰值']
-  #   d = ['后缘角','后圆角']
-  #   if check(a):return check(a)
-  #   if check(b):return check(b)
-  #   if check(c):return check(c)
-  #   if check(d):return check(d)
-  #   return '你好，可以说的再清楚一些么？'
-  
-  # def prompt2value(prompt):
-  #   one = ['1','一']
-  #   two = ['2','']
-  #   three = ['3',]
-  #   four = []
-  #   five = []
-  #   six = []
-  #   seven = []
-  #   eight = []
-  #   nine = []
-  #   ten = []
-  #   values = [1,2,3,4,5,6,7,8,9,10]
-  #   chinese_values = ['一','二','三','四','五','六','七','八','九','十']
-
-  #   for v in values:
-  #       if str(v) in prompt:
-  #           return v
-  #   for v in chinese_values:
-  #       if v in prompt:
-  #           return chinese_values.index(v)+1
-  #   return 0
-  # param = prompt2param() # prompt 和 keys算相似度，取出来
-  # value = prompt2value() # prompt 和 values算相似度，取出来
-  # return param,value
-    
+  print(results)
+  ## 写一个逻辑，能够将prompt和 physical_quantities匹配上
+  prompt_pingyin = p.get_pinyin(prompt)
+  key = process_pingyin(prompt_pingyin)
+  num = re.findall(r'\d+|[一二三四五六七八九十时两]+', prompt)
+  try:
+      arabic_num = int(num[0])
+  except ValueError:
+      arabic_num = chinese_to_arabic(num[0])
+  results[key] = arabic_num
+  for key, value in results.items():
+      if value != 0:
+        return key,value
+  print(results)
+  return prompt,-1

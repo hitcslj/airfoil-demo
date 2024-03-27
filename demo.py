@@ -45,7 +45,7 @@ img_paths = get_path('data/airfoil/demo/picked_uiuc_img')
 point_paths = get_path('data/airfoil/demo/picked_uiuc')
 name2params = get_params('data/airfoil/parsec_params.txt')
 global_points = []
-target_size = (400, 400)
+target_size = (600, 600)
 
 def clear():
     global global_points
@@ -176,7 +176,7 @@ def infer(input_image,idx,slider0,slider1,slider2,slider3):
       # show(assy, angular_tolerance=0.1)
       assy.save(path='output3d.stl',exportType='STL')
       # model3d = trimesh.load('output3d.stl')
-    model3d =  gr.Model3D(value='output3d.stl',label='Output 3D Airfoil',camera_position=(270,0,None))
+    model3d =  gr.Model3D(value='output3d.stl',label='Output 3D Airfoil',camera_position=(-90,2,800))
     return output_img,model3d
 
 def get_points_with_draw(image, evt: gr.SelectData):
@@ -255,7 +255,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
       img_out = gr.Image(label="Output Airfoil",width=600,height=600)
       ## 3D model show
       # model3d = gr.Model3D(label='Output 3D Airfoil',value='assets/airfoil.stl',camera_position=(270,0,None)) # 调位姿
-      model3d = gr.Model3D(label='Output 3D Airfoil',camera_position=(-90,2,600)) # 调位姿
+      model3d = gr.Model3D(label='Output 3D Airfoil',camera_position=(-90,2,800)) # 调位姿
     with gr.Row():
         with gr.Row():
             bn_before = gr.Button("前一个")

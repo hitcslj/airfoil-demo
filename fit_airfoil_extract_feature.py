@@ -2,8 +2,10 @@ import numpy as np
 from scipy.interpolate import splev,splprep
 from scipy import optimize
 import matplotlib.pyplot as plt
+from multiprocessing import Pool
+import os
 
-class fit_airfoil():
+class Fit_airfoil():
     '''
     Fit airfoil by 3 order Bspline and extract Parsec features.
     airfoil (npoints,2)
@@ -13,6 +15,7 @@ class fit_airfoil():
         self.tck, self.u  = splprep(airfoil.T,s=0)
 
         # parsec features
+        # import pdb; pdb.set_trace()
         rle = self.get_rle()
         xup, yup, yxxup = self.get_up()
         xlo, ylo, yxxlo = self.get_lo()
@@ -31,7 +34,7 @@ class fit_airfoil():
         uLE = self.u[self.iLE]
         xu,yu = splev(uLE, self.tck,der=1) # dx/du
         xuu,yuu = splev(uLE, self.tck,der=2) # ddx/du^2
-        K = (xu*yuu-xuu*yu)/(xu**2+yu**2)**1.5 # curvature
+        K = abs(xu*yuu-xuu*yu)/(xu**2+yu**2)**1.5 # curvature
         return 1/K
     
     def get_up(self):
@@ -39,7 +42,7 @@ class fit_airfoil():
             x_tmp,y_tmp = splev(u_tmp, self.tck)
             return -y_tmp
         
-        res = optimize.minimize_scalar(f,bounds=(0,self.u[self.iLE]),tol=1e-10)
+        res = optimize.minimize_scalar(f,bounds=(0,self.u[self.iLE]),method='bounded')
         uup = res.x
         xup ,yup = splev(uup, self.tck)
 
@@ -54,7 +57,7 @@ class fit_airfoil():
             x_tmp,y_tmp = splev(u_tmp, self.tck)
             return y_tmp
         
-        res = optimize.minimize_scalar(f,bounds=(self.u[self.iLE],1),tol=1e-10)
+        res = optimize.minimize_scalar(f,bounds=(self.u[self.iLE],1),method='bounded')
         ulo = res.x
         xlo ,ylo = splev(ulo, self.tck)
 
@@ -81,7 +84,7 @@ class fit_airfoil():
             x_tmp,y_tmp = splev(u_tmp, self.tck)
             return -y_tmp
         
-        res = optimize.minimize_scalar(f,bounds=(0.75,1),tol=1e-10)
+        res = optimize.minimize_scalar(f,bounds=(0.75,1),method='bounded')
         ulo = res.x
         xlo ,ylo = splev(ulo, self.tck)
 
@@ -90,8 +93,3 @@ class fit_airfoil():
         # yx = yu/xu
         yxx = (yuu*xu-xuu*yu)/xu**3
         return xlo, ylo, yxx
-
-name = "/mnt/c/Users/liujianpjlab/Desktop/airfoil-demo/data/airfoil/supercritical_airfoil/air06_001500.dat"
-data = np.loadtxt(name,skiprows=1,usecols=[0,2])
-ff = fit_airfoil(data)
-print(ff.parsec_features)

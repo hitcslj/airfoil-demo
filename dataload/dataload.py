@@ -119,7 +119,7 @@ class AirFoilDataset2(Dataset):
         mid_input = self.calMidLine(input) # [9,2]
         # params = params[0:9] # 9个参数
         params = torch.FloatTensor(params)
-        return {'input':input,'output':data,'params':params,'mid_input':mid_input,'mid_output':mid_data}
+        return {'keypoint':input,'gt':data,'params':params,'mid_input':mid_input,'mid_output':mid_data}
     
     def __len__(self):
         return len(self.txt_list)
