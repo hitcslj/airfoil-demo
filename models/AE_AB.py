@@ -90,7 +90,7 @@ class AE_AB(nn.Module):
         return target_params_pred,target_point_pred
 
 
-class AE_AB_parsec(nn.Module):
+class AE_AB_Parsec(nn.Module):
     def __init__(self,modelA,modelB) -> None:
         super().__init__()
         self.modelA = modelA
@@ -130,7 +130,7 @@ class AE_AB_parsec(nn.Module):
 
 
 
-class AE_AB_keypoint(nn.Module):
+class AE_AB_Keypoint(nn.Module):
     def __init__(self,modelA,modelB) -> None:
         super().__init__()
         self.modelA = modelA
