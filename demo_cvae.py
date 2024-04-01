@@ -33,6 +33,13 @@ param2idx = {
 
 p2idx = [0,2,5,9]
 
+# 设置随机数种子
+seed = 42
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+np.random.seed(seed)
+random.seed(seed)
+
 
 airfoils_collection = load_airfoils_collection()
 airfoil_data = airfoils_collection["NACA 6 series airfoils"]["NACA 64(3)-218 (naca643218-il)"]

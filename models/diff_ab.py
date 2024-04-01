@@ -28,7 +28,7 @@ class Diff_AB_Parsec(nn.Module):
         target_keypoint_pred = norm(target_keypoint_pred)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # target_params(b,11),target_keypoint(b,26*2) target_full_latent(b,128)
-        samples = self.diffusion.sample(batch_size=1, device=device, y=target_param.squeeze(-1), y2=target_keypoint_pred.reshape(-1,26*2)).to(device)
+        samples = self.diffusion.sample_ddim(batch_size=1, device=device, y=target_param.squeeze(-1), y2=target_keypoint_pred.reshape(-1,26*2)).to(device)
         # samples = torch.randn(1,128).to(device)
         with torch.no_grad():
             samples = self.vae.decode(samples.squeeze(-1))  # latent_space(b,128)->(b,257*2)上进行diffusion
@@ -42,7 +42,7 @@ class Diff_AB_Parsec(nn.Module):
         target_keypoint_pred = norm(target_keypoint_pred)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # target_params(b,11),target_keypoint(b,26*2) target_full_latent(b,128)
-        samples = self.diffusion.sample(batch_size=1, device=device, y=target_param.squeeze(-1), y2=target_keypoint_pred.reshape(-1,26*2)).to(device)
+        samples = self.diffusion.sampe_ddim(batch_size=1, device=device, y=target_param.squeeze(-1), y2=target_keypoint_pred.reshape(-1,26*2)).to(device)
         # samples = torch.randn(1,128).to(device)
         with torch.no_grad():
             samples = self.vae.decode(samples.squeeze(-1))  # latent_space(b,128)->(b,257*2)上进行diffusion
@@ -85,7 +85,7 @@ class Diff_AB_Keypoint(nn.Module):
         target_param_pred = self.modelA(source_keypoint,target_keypoint,source_param.expand(-1,-1,2))
         # target_keypoint = norm(target_keypoint)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        samples = self.diffusion.sample(batch_size=1, device=device, y=target_param_pred.squeeze(-1), y2=target_keypoint.reshape(-1,26*2)).to(device)
+        samples = self.diffusion.sample_ddim(batch_size=1, device=device, y=target_param_pred.squeeze(-1), y2=target_keypoint.reshape(-1,26*2)).to(device)
         with torch.no_grad():
             samples = self.vae.decode(samples.squeeze(-1))
         target_point_pred = de_norm(samples.reshape(-1,257,2))

@@ -44,10 +44,9 @@ def get_point_diffusion(path):
             data.append([float(values[0]), float(values[1])])
     
     data = np.array(data)
-    data = data[:200]
-    upper = data[:100][::4]
-    mid = data[100:101]
-    low = data[101:][::4]
+    upper = data[:128][::4]
+    mid = data[128:129]
+    low = data[129:][::4]
     low[-1][0]=1
     low[-1][1]=0
     keypoint_3d = np.concatenate((upper,mid,low),axis=0)
@@ -106,7 +105,7 @@ def point2img(data):
     # remove box, and save img
     plt.box(False)
      
-    file_path = 'output.png'
+    file_path = 'generate_result/output.png'
     plt.savefig(file_path, dpi=100, bbox_inches='tight', pad_inches=0.0)
     # Clear the plot cache
     plt.clf()
