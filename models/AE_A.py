@@ -45,7 +45,7 @@ class AE(nn.Module):
         return decoded
 
 
-class AE_A_Parsec(nn.Module): # （source_keypoint, source_param, target_param-> target_keypoint）
+class AE_A_Parsec(nn.Module): # source_param,target_param,source_keypoint -> target_keypoint
     def __init__(self,in_channels=2,
                  ae_channels=26*16,
                 ) -> None:
