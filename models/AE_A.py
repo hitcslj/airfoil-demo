@@ -43,48 +43,7 @@ class AE(nn.Module):
         encoded=self.encoder(x)
         decoded=self.decoder(encoded)
         return decoded
- 
 
-class AE_A_Keypoint(nn.Module): # （source_keypoint, source_param, target_keypoint）-> target_param
-    def __init__(self,in_channels=2,
-                 ae_channels=11*16,
-                ) -> None:
-        super().__init__()
-
-        self.mlp11 = MLP(in_channels,4,2) # (B,200,2) --> (B,200,16)
-        self.mlp12 = MLP(2,4,16)
-        
-        self.mlp_delta1 = MLP(2,4,16)
-        self.mlp_delta2 = MLP(26*16,15*16,11*16)
-        
-        self.input_proj = MLP(11*16,11*16,11*16)
-        
-        self.ae = AE(in_channels=ae_channels)
-        self.mlp21 = MLP(ae_channels, ae_channels*2, 11*16)
-        self.mlp22 = MLP(16, 8, 1)
-        
-    def _forward_with_cond(self,x,cond,bs):
-        x = x.reshape(bs,-1) # (B,11,16) --> (B,11*16)
-        x = self.input_proj(x) # (B,11*16) --> (B,11*16)
-        return x + cond 
-        
-    def forward(self,x,x2,p): # y就是物理参数
-        bs = x.shape[0]
-        delta_x = torch.sub(x,x2) # (B,26,2)
-        delta_feat = self.mlp_delta1(delta_x) # (B,26,16)
-        delta_feat = delta_feat.reshape(bs,-1) # (B,26*16)
-        delta_feat = self.mlp_delta2(delta_feat) # (B,26*16) --> (B,11*16)
-        
-        ae_input = self.mlp11(p) # (B,11,2)
-        ae_input = self.mlp12(ae_input) # (B,11,2) --> (B,11,16)
-        ae_input = self._forward_with_cond(ae_input,delta_feat,bs)
-        
-        ae_output = self.ae(ae_input) # (B,11*16) --> (B,11*16)
-        ae_output = self.mlp21(ae_output) # (B,11*16) --> (B,11*16)
-        y = ae_output.reshape(bs,11,16) # (B,11*16) --> (B,11,16)
-
-        output = self.mlp22(y) # (B,11,16) --> (B,11,1)
-        return output
 
 class AE_A_Parsec(nn.Module): # （source_keypoint, source_param, target_param-> target_keypoint）
     def __init__(self,in_channels=2,
@@ -109,7 +68,7 @@ class AE_A_Parsec(nn.Module): # （source_keypoint, source_param, target_param->
         x = self.input_proj(x) # (B,26*16) --> (B,26*16)
         return x + cond 
         
-    def forward(self,p,p2,x): # y就是物理参数
+    def forward(self,p,p2,x): 
         bs = p.shape[0]
         delta_p = torch.sub(p,p2) # (B,11,1)
         delta_feat = self.mlp_delta1(delta_p) # (B,11,16)
@@ -126,3 +85,48 @@ class AE_A_Parsec(nn.Module): # （source_keypoint, source_param, target_param->
 
         output = self.mlp22(y) # (B,26,16) --> (B,26,2)
         return output
+
+
+class AE_A_Keypoint(nn.Module): # （source_keypoint, source_param, target_keypoint）-> target_param
+    def __init__(self,in_channels=2,
+                 ae_channels=11*16,
+                ) -> None:
+        super().__init__()
+
+        self.mlp11 = MLP(in_channels,4,2) # (B,257,2) --> (B,257,16)
+        self.mlp12 = MLP(2,4,16)
+        
+        self.mlp_delta1 = MLP(2,4,16)
+        self.mlp_delta2 = MLP(26*16,15*16,11*16)
+        
+        self.input_proj = MLP(11*16,11*16,11*16)
+        
+        self.ae = AE(in_channels=ae_channels)
+        self.mlp21 = MLP(ae_channels, ae_channels*2, 11*16)
+        self.mlp22 = MLP(16, 8, 1)
+        
+    def _forward_with_cond(self,x,cond,bs):
+        x = x.reshape(bs,-1) # (B,11,16) --> (B,11*16)
+        x = self.input_proj(x) # (B,11*16) --> (B,11*16)
+        return x + cond 
+        
+    def forward(self,x,x2,p): 
+        bs = x.shape[0]
+        delta_x = torch.sub(x,x2) # (B,26,2)
+        delta_feat = self.mlp_delta1(delta_x) # (B,26,16)
+        delta_feat = delta_feat.reshape(bs,-1) # (B,26*16)
+        delta_feat = self.mlp_delta2(delta_feat) # (B,26*16) --> (B,11*16)
+        
+        ae_input = self.mlp11(p) # (B,11,2)
+        ae_input = self.mlp12(ae_input) # (B,11,2) --> (B,11,16)
+        ae_input = self._forward_with_cond(ae_input,delta_feat,bs)
+        
+        ae_output = self.ae(ae_input) # (B,11*16) --> (B,11*16)
+        ae_output = self.mlp21(ae_output) # (B,11*16) --> (B,11*16)
+        y = ae_output.reshape(bs,11,16) # (B,11*16) --> (B,11,16)
+
+        output = self.mlp22(y) # (B,11,16) --> (B,10,1)
+        return output
+
+
+

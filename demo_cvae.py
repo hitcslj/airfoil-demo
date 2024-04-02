@@ -172,7 +172,7 @@ def infer(input_image,idx,slider0,slider1,slider2,slider3):
         target_keypoint = source_keypoint.clone() # [1,26,2]
 
         target_keypoint[:,6,1]*=5
-        _,target_point_pred = model_k.editing_point(source_keypoint, target_keypoint, source_params)
+        target_point_pred = model_k.editing_point(source_keypoint, target_keypoint, source_params)
         point2img(target_point_pred[0].cpu().numpy())
         output_img = show_img('generate_result/output.png')
 

@@ -50,7 +50,7 @@ airfoil = Airfoil(airfoil_data) # 将这个airfoil对象的profile属性
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 vae = VAE().to(device) # latent_space(b,128)->(b,257*2)上进行diffusion
-checkpoint = torch.load('weights/vae/vae_ckpt_epoch_30000.pth', map_location='cpu')
+checkpoint = torch.load('weights/vae/ckpt_epoch_30000.pth', map_location='cpu')
 vae.load_state_dict(checkpoint['model'])
 vae.eval()
 
@@ -182,7 +182,7 @@ def infer(input_image,idx,slider0,slider1,slider2,slider3):
         target_keypoint = source_keypoint.clone() # [1,26,2]
 
         target_keypoint[:,6,1]*=5
-        _,target_point_pred = model_k.editing_point(source_keypoint, target_keypoint, source_params)
+        target_point_pred = model_k.editing_point(source_keypoint, target_keypoint, source_params)
         point2img(target_point_pred[0].cpu().numpy())
         output_img = show_img('generate_result/output.png')
 

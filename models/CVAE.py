@@ -51,15 +51,7 @@ class CVAE(nn.Module):
         z = self.reparameterize(mu, logvar)
         return self.decode(z, c.view(-1,self.condition_size)), mu, logvar
 
-    def forward2(self, x, c):
-        mu, logvar = self.encode(x.view(-1, self.feature_size), c.view(-1,self.condition_size))
-        z = self.reparameterize(mu, logvar)
-        batch = x.shape[0]
-        z = torch.randn((batch,self.latent_size)).to(x.device)
-        # 扰动condition, 比如把前缘半径增大两倍
-        return self.decode(z, c.view(-1,self.condition_size)), mu, logvar
-
-    def forward3(self,c):
+    def sample(self,c):
         batch = c.shape[0]
         z = torch.randn((batch,self.latent_size)).to(c.device)
         recons_batch = self.decode(z, c.view(-1,self.condition_size))
