@@ -1,15 +1,14 @@
 import gradio as gr
 
-
+path = 'generate_result/airplane.stl'
 def infer(slider_bar):
-  path = 'output3d.stl'
-  model3d = gr.Model3D(value=path,label='Output 3D Airfoil',camera_position=(-90,2,slider_bar)) # 调位姿
+  model3d = gr.Model3D(value=path,label='Output 3D Airfoil',camera_position=(-103,83,slider_bar)) # 调位姿
   return model3d
 
 with gr.Blocks() as demo:
 
-  model3d = gr.Model3D(value='airfoil_ag36.stl',label='Output 3D Airfoil',camera_position=(-90,2,500)) # 调位姿
-  slider_bar = gr.Slider(500, 1000, step=10,label='slider_bar',value=500)
+  model3d = gr.Model3D(value=path,label='Output 3D Airfoil',camera_position=(-103,83,7000)) # 调位姿
+  slider_bar = gr.Slider(1, 10000, step=1,label='slider_bar',value=8000)
   submit_button = gr.Button()
   submit_button.click(infer,
                 inputs=[slider_bar],

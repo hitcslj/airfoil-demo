@@ -8,14 +8,8 @@ import matplotlib.pyplot as plt
 from audio_api import audio2parsec
 from models import AE_A_Parsec,AE_A_Keypoint,CVAE,AE_AB_Parsec,AE_AB_Keypoint
 from utils import get_name,get_params,get_path,get_point_cvae,point2img
-from cquav.wing.airfoil import load_airfoils_collection
-from cquav.wing.airfoil import Airfoil
-from cquav.wing.profile import AirfoilSection
-from cquav.wing.rect_console import RectangularWingConsole
-import cadquery as cq
 import numpy as np
 from PIL import ImageDraw
-import trimesh
 from utils import Fit_airfoil
 
 nameDict =[
@@ -40,10 +34,6 @@ torch.cuda.manual_seed(seed)
 np.random.seed(seed)
 random.seed(seed)
 
-
-airfoils_collection = load_airfoils_collection()
-airfoil_data = airfoils_collection["NACA 6 series airfoils"]["NACA 64(3)-218 (naca643218-il)"]
-airfoil = Airfoil(airfoil_data) # 将这个airfoil对象的profile属性，
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -177,39 +167,7 @@ def infer(input_image,idx,slider0,slider1,slider2,slider3):
         output_img = show_img('generate_result/output.png')
 
     # 3D model
-    # 处理得到 (51,)
-    keypoint_3d = prepare2airfoil(target_point_pred[0].cpu().numpy())
-    # print(keypoint_3d.shape)
-    # print(keypoint_3d)
-    airfoil_x = airfoil.profile['A'].copy()
-    airfoil_y = airfoil.profile['B'].copy()
-    try:
-      airfoil.profile['A'] =keypoint_3d[:,0]  # (51,)
-      airfoil.profile['B'] =keypoint_3d[:,1]  # (51,)
-      airfoil_section = AirfoilSection(airfoil, chord=200)
-      wing_console = RectangularWingConsole(airfoil_section, length=800)
-      assy = cq.Assembly()
-      assy.add(wing_console.foam, name="foam", color=cq.Color("lightgray"))
-      assy.add(wing_console.front_box, name="left_box", color=cq.Color("yellow"))
-      assy.add(wing_console.central_box, name="central_box", color=cq.Color("yellow"))
-      assy.add(wing_console.rear_box, name="right_box", color=cq.Color("yellow"))
-      assy.add(wing_console.shell, name="shell", color=cq.Color("lightskyblue2"))
-      # show(assy, angular_tolerance=0.1)
-      assy.save(path='generate_result/output3d.stl',exportType='STL')
-    except:
-      airfoil.profile['A'] = airfoil_x  # (51,)
-      airfoil.profile['B'] = airfoil_y  # (51,)
-      airfoil_section = AirfoilSection(airfoil, chord=200)
-      wing_console = RectangularWingConsole(airfoil_section, length=800)
-      assy = cq.Assembly()
-      assy.add(wing_console.foam, name="foam", color=cq.Color("lightgray"))
-      assy.add(wing_console.front_box, name="left_box", color=cq.Color("yellow"))
-      assy.add(wing_console.central_box, name="central_box", color=cq.Color("yellow"))
-      assy.add(wing_console.rear_box, name="right_box", color=cq.Color("yellow"))
-      assy.add(wing_console.shell, name="shell", color=cq.Color("lightskyblue2"))
-      # show(assy, angular_tolerance=0.1)
-      assy.save(path='generate_result/output3d.stl',exportType='STL')
-    model3d =  gr.Model3D(value='generate_result/output3d.stl',label='Output 3D Airfoil',camera_position=(-90,2,800))
+    model_airplane = gr.Model3D(value='generate_result/airplane.stl',label='Output Airplane',camera_position=(-103,83,7000))
     ## 这里可以计算物理量的误差
     target_parsec_features =  Fit_airfoil(target_point_pred[0].cpu().numpy()).parsec_features # 11个物理量
     error = ''
@@ -223,7 +181,7 @@ def infer(input_image,idx,slider0,slider1,slider2,slider3):
         error += f'{name}: source_param {s_e:.4f}, target_param {t_e:.4f}, ratio {ratio:.2f}' + '\n'
         
 
-    return output_img,model3d,error
+    return output_img,error,model_airplane
 
 def get_points_with_draw(image, evt: gr.SelectData):
     x, y = evt.index[0], evt.index[1]
@@ -298,8 +256,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
       img_in = gr.Image(label="Input Airfoil",width=600,height=600)
       img_out = gr.Image(label="Output Airfoil",width=600,height=600)
       ## 3D model show
-      # model3d = gr.Model3D(label='Output 3D Airfoil',value='assets/airfoil.stl',camera_position=(270,0,None)) # 调位姿
-      model3d = gr.Model3D(label='Output 3D Airfoil',camera_position=(-90,2,800)) # 调位姿
+      model_airplane = gr.Model3D(label='Output Airplane',camera_position=(-103,83,7000)) # 调位姿
     with gr.Row():
         with gr.Row():
             bn_before = gr.Button("前一个")
@@ -332,7 +289,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
     clear_points.click(clear, outputs=[img_in,img_out])
     submit_button.click(infer,
                     inputs=ips,
-                    outputs=[img_out,model3d,error])
+                    outputs=[img_out,error,model_airplane])
     gr.Markdown("## Airfoil Examples")
     gr.Examples(
         examples=['data/airfoil/demo/supercritical_airfoil_img/air05_000001.png',
