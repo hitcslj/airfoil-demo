@@ -2,7 +2,7 @@
 
 Editing keypoint &amp; parameters, built upon [gradio](https://www.gradio.app/)
 
-
+<img src="./assets/airfoil_demo.png" width="696px">
 
 ## Installation
 
