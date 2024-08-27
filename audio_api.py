@@ -159,8 +159,8 @@ class RequestApi(object):
 
 def audio2parsec(upload_file_path):
   t1 = time.time()
-  api = RequestApi(appid="74d744fa",
-                  secret_key="752071b4b90c4406a05ad3bc78b100e7",
+  api = RequestApi(appid="2c481fcb",
+                  secret_key="40007fc72d491a02b571343aa4e80de9",
                   upload_file_path=upload_file_path)
   t2 = time.time() - t1
 

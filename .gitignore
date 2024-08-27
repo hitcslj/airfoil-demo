@@ -4,8 +4,7 @@
 .idea
 /logs
 /dist
-/examples/dataset
-/examples/results
+debug.py
 *~
 */*/*.pth
 */*/*/*.dat
@@ -13,12 +12,12 @@ __pycache__
 */__pycache__
 */*/__pycache__
 */*/*/__pycache__
-*.png
-*/*.png
-*/*/.png
-*/*/*/.png
-*/*/*/*/.png
-*/*/*/*/*/.png
+# *.png
+# */*.png
+*/*/*.png
+*/*/*/*.png
+*/*/*/*/*.png
+*/*/*/*/*/*.png
 gradio_cached_examples
 flagged
 

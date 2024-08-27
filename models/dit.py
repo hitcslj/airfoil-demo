@@ -375,6 +375,7 @@ class PointDiTDiffusion2(nn.Module):
         
         # start from pure noise (for each example in the batch)
         x = torch.randn(batch_size, self.latent_size, self.channels, device=device)
+        #修改，不从白噪声开始，从中间扩散T步；看看论文先！！
         for i in tqdm(reversed(range(0, ddim_timesteps)), desc='sampling loop time step', total=ddim_timesteps):
             t = torch.full((batch_size,), ddim_timestep_seq[i], device=device, dtype=torch.long)
             prev_t = torch.full((batch_size,), ddim_timestep_prev_seq[i], device=device, dtype=torch.long)

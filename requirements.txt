@@ -19,6 +19,8 @@ pandas
 dict_hash
 python-slugify
 trimesh
-git+https://github.com/nomad-vagabond/cq-uav.git@0.0.6
+timm
 aerosandbox[full]
 pyvista
+xpinyin
+cadquery

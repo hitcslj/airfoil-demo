@@ -6,6 +6,10 @@ import torch
 from scipy.interpolate import splev,splprep
 from scipy import optimize
 import matplotlib.pyplot as plt
+import aerosandbox as asb
+import aerosandbox.numpy as np
+from scipy.interpolate import splev, splrep,splprep
+from PIL import Image, ImageDraw
 
 
 def norm(data):
@@ -30,7 +34,6 @@ def get_path(root_path):
 
 def get_name(path):
     return path.split('/')[-1].split('.')[0]
-
 
 
 def get_point_diffusion(path):
@@ -87,28 +90,28 @@ def get_params(txt_path):
           # 取出路径的最后一个文件名作为key
           name = get_name(name_params[0])
           params[name] = list(map(float,name_params[1:]))
+
     return params
 
+# def point2img(data):
+#     ## 将data可视化，要求x,y尺度一致
+#     plt.plot(data[:,0], data[:,1])
+#     plt.gca().set_aspect('equal', adjustable='box')
 
-def point2img(data):
-    ## 将data可视化，要求x,y尺度一致
-    plt.plot(data[:,0], data[:,1])
-    plt.gca().set_aspect('equal', adjustable='box')
+#     # 将x尺度保持不变，y尺度显示的时候resize成原来的1/5
 
-    # 将x尺度保持不变，y尺度显示的时候resize成原来的1/5
+#     plt.gcf().set_facecolor('black')  # 设置背景色为黑色
+#     # 去除坐标轴
+#     plt.xticks([])
+#     plt.yticks([])
 
-    plt.gcf().set_facecolor('black')  # 设置背景色为黑色
-    # 去除坐标轴
-    plt.xticks([])
-    plt.yticks([])
-
-    # remove box, and save img
-    plt.box(False)
+#     # remove box, and save img
+#     plt.box(False)
      
-    file_path = 'generate_result/output.png'
-    plt.savefig(file_path, dpi=100, bbox_inches='tight', pad_inches=0.0)
-    # Clear the plot cache
-    plt.clf()
+#     file_path = 'generate_result/output.png'
+#     plt.savefig(file_path, dpi=100, bbox_inches='tight', pad_inches=0.0)
+#     # Clear the plot cache
+#     plt.clf()
 
 
 class Fit_airfoil():
@@ -197,6 +200,241 @@ class Fit_airfoil():
         # yx = yu/xu
         yxx = (yuu*xu-xuu*yu)/xu**3
         return xlo, ylo, yxx
+
+
+def interpolote_up(data, x_coords):
+    x = data[:,0][::-1]
+    y = data[:,1][::-1]
+    spl = splrep(x, y, s = 0)
+    y_interp = splev(x_coords, spl)
+    x_coords = x_coords[::-1]
+    y_interp = y_interp[::-1]
+    return np.array([x_coords, y_interp]).T
+
+def interpolote_down(data, x_coords):
+    x = data[:,0]
+    y = data[:,1]
+    spl = splrep(x, y, s = 0)
+    y_interp = splev(x_coords, spl)
+    return np.array([x_coords, y_interp]).T
+
+
+def interpolate(data,s_x = 128, t_x = 129):
+    # bspline 插值
+    up = data[:s_x]  # 上表面原来为100个点, 插值为128个点
+    mid = data[s_x:s_x+1]
+    down = data[s_x+1:]  # 下表面原来为100个点，插值为128个点
+
+    theta = np.linspace(np.pi, 2*np.pi, t_x)
+    x_coords = (np.cos(theta) + 1.0) / 2
+    x_coords = x_coords[1:]  # 从小到大
+    
+    up_interp = interpolote_up(up, x_coords)
+
+    down_interp = interpolote_down(down, x_coords)
+
+    # 组合上下表面
+    interpolated_data = np.concatenate((up_interp, mid, down_interp))
+    
+    # x,y = data[:,0],data[:,1]
+    # x2,y2 = interpolated_data[:,0],interpolated_data[:,1]
+
+    # # 可视化验证
+    # plt.plot(x, y, 'o', x2, y2)
+    # plt.show()
+    # plt.savefig('interpolated.png')
+    return interpolated_data
+
+def bernstein_poly(i, n, t):
+    return np.math.comb(n, i) * (t**i) * ((1 - t)**(n - i))
+
+def bezier_curve(control_points, t):
+    n = len(control_points) - 1
+    curve = np.zeros((len(t), control_points.shape[1]))  # 初始化曲线数组
+    for i in range(len(t)):
+        for j in range(n + 1):
+            curve[i] += bernstein_poly(j, n, t[i]) * control_points[j]
+    return curve
+
+
+def point2img(data):
+    # 图像尺寸
+    width, height = 600, 600
+    dpi = 300
+    background_color = (0, 0, 0)  # 黑色背景
+    point_color = (255, 255, 255)  # 白色点
+    line_color = (255, 255, 255)
+    # 创建一个新的图像
+    img = Image.new('RGB', (width, height), background_color)
+    img.info['dpi'] = (dpi, dpi)
+    draw = ImageDraw.Draw(img)
+
+    # 找到数据的范围
+    # min_x, max_x = min(data[:, 0]), max(data[:, 0])
+    # min_y, max_y = min(data[:, 1]), max(data[:, 1])
+
+    #定义绘图范围(为了保证编辑前后视觉效果一致性)
+    min_x, max_x = 0, 1
+    min_y, max_y = -0.08, 0.08
+
+    # 定义缩放比例
+    scale_x = width / (max_x - min_x)
+    scale_y = height / (max_y - min_y) / 5  # y方向缩小为1/5
+    y_offset = (height - (max_y - min_y) * scale_y) / 2
+    # 绘制散点
+    # for x, y in data:
+    #     # 将数据点转换为图像坐标
+    #     px = int((x - min_x) * scale_x)
+    #     py = int((y - min_y) * scale_y + y_offset)
+    #     draw.point((px, height - py), fill=point_color)
+    points = [(int((x - min_x) * scale_x), int((y - min_y) * scale_y + y_offset)) for x, y in data]
+    
+    # 绘制线段
+    for i in range(len(points) - 1):
+        draw.line((points[i][0], height - points[i][1], points[i+1][0], height - points[i+1][1]), fill=line_color, width=3)
+    # 保存图像
+    file_path = 'generate_result/output.png'
+    img.save(file_path)
+    point2img_high(data)
+    return img# , scale_x, scale_y, y_offset
+
+
+def point2img_high(data):
+    plt.style.use('dark_background')
+    plt.figure(figsize=(10, 2))
+    plt.plot(data[:, 0], data[:, 1], 'w-')
+    plt.grid(False)
+    #plt.axis('equal')
+    plt.axis('off')  # 关闭坐标轴显示
+    plt.savefig('./generate_result/test.png',dpi=300, bbox_inches='tight')
+
+def pixel_to_coordinate(pixel_x, pixel_y ,data, f=2):
+    # 找到数据的范围
+    min_x, max_x = min(data[:, 0]), max(data[:, 0])
+    min_y, max_y = min(data[:, 1]), max(data[:, 1])
+    # 图像尺寸
+    width, height = 600, 600
+    # 定义缩放比例
+    scale_x = width / (max_x - min_x)
+    scale_y = height / (max_y - min_y) / f #/ 5  # y方向缩小为1/f, f表示拖拽的力度
+    # y方向的偏移量，使点在图像中间
+    y_offset = (height - (max_y - min_y) * scale_y) / 2
+    # 将像素坐标转换为数据坐标
+    data_x = pixel_x / scale_x + min_x
+    data_y = (height - (pixel_y - y_offset)) / scale_y + min_y
+    return torch.FloatTensor([[data_x, data_y]])
+
+
+def generate_3D_from_dat(wing_dat, stl_path = "generate_result/airplane_tmp.stl"):
+    """
+    wing_dat: 定义机翼的 [x, y] 坐标的 Nx2 数组, 点应始于后缘的上表面，继续向前越过上表面，环绕前缘，继续向后越过下表面，然后在下表面的后缘处结束。
+    stl_path: 暂存stl文件路径, 用于gradio展示
+    """
+
+    #wing_airfoil = asb.Airfoil("sd7037")
+    wing_airfoil = asb.Airfoil(coordinates=wing_dat)
+    tail_airfoil = asb.Airfoil("naca0010")
+
+    ### Define the 3D geometry you want to analyze/optimize.
+    # Here, all distances are in meters and all angles are in degrees.
+    airplane = asb.Airplane(
+        name="Peter's Glider",
+        xyz_ref=[0, 0, 0],  # CG location
+        wings=[
+            asb.Wing(
+                name="Main Wing",
+                xyz_le=[0, 0, 0],  # Coordinates of the wing's leading edge
+                symmetric=True,  # Should this wing be mirrored across the XZ plane?
+                xsecs=[  # The wing's cross ("X") sections
+                    asb.WingXSec(  # Root
+                        xyz_le=[0, 0, 0],  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
+                        chord=0.18,
+                        twist=2,  # degrees
+                        airfoil=wing_airfoil,  # Airfoils are blended between a given XSec and the next one.
+                        control_surface_is_symmetric=True,
+                        # Flap (ctrl. surfs. applied between this XSec and the next one.)
+                        control_surface_deflection=0,  # degrees
+                    ),
+                    asb.WingXSec(  # Mid
+                        xyz_le=[0.01, 0.6, 0],
+                        chord=0.16,
+                        twist=0,
+                        airfoil=wing_airfoil,
+                        control_surface_is_symmetric=False,  # Aileron
+                        control_surface_deflection=0,
+                    ),
+                    # asb.WingXSec(  # Tip
+                    #     xyz_le=[0.08, 1, 0.1],
+                    #     chord=0.08,
+                    #     twist=-2,
+                    #     airfoil=wing_airfoil,
+                    # ),
+                ]
+            ),
+            asb.Wing(
+                name="Horizontal Stabilizer",
+                symmetric=True,
+                xsecs=[
+                    asb.WingXSec(  # root
+                        xyz_le=[0, 0, 0],
+                        chord=0.1,
+                        twist=-10,
+                        airfoil=tail_airfoil,
+                        control_surface_is_symmetric=True,  # Elevator
+                        control_surface_deflection=0,
+                    ),
+                    asb.WingXSec(  # tip
+                        xyz_le=[0.02, 0.17, 0],
+                        chord=0.08,
+                        twist=-10,
+                        airfoil=tail_airfoil
+                    )
+                ]
+            ).translate([0.6, 0, 0.06]),
+            asb.Wing(
+                name="Vertical Stabilizer",
+                symmetric=False,
+                xsecs=[
+                    asb.WingXSec(
+                        xyz_le=[0, 0, 0],
+                        chord=0.1,
+                        twist=0,
+                        airfoil=tail_airfoil,
+                        control_surface_is_symmetric=True,  # Rudder
+                        control_surface_deflection=0,
+                    ),
+                    asb.WingXSec(
+                        xyz_le=[0.04, 0, 0.15],
+                        chord=0.06,
+                        twist=0,
+                        airfoil=tail_airfoil
+                    )
+                ]
+            ).translate([0.6, 0, 0.07])
+        ],
+        fuselages=[
+            asb.Fuselage(
+                name="Fuselage",
+                xsecs=[
+                    asb.FuselageXSec(
+                        xyz_c=[0.8 * xi - 0.1, 0, 0.1 * xi - 0.03],
+                        radius=0.6 * asb.Airfoil("dae51").local_thickness(x_over_c=xi)
+                    )
+                    for xi in np.cosspace(0, 1, 30)
+                ]
+            )
+        ]
+    )
+    
+    airplane.export_cadquery_geometry(filename=stl_path)
+    # # 可视化飞机几何模型
+    # fig, ax = airplane.draw()
+
+    # # 保存图片
+    # fig.savefig(stl_path + ".png", dpi=300, bbox_inches='tight')
+
+    return airplane
+
 
 # if __name__ == '__main__':
 #   ## 遍历data/airfoil/picked_uiuc/下的所有文件.dat文件

@@ -1,10 +1,12 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from shutil import which
 
 avl_is_present = which('avl') is not None
 
-sd7037 = asb.Airfoil("sd7037")
+sd7037 = asb.Airfoil("sd7032")
 
 airplane = asb.Airplane(
     name="Vanilla",
@@ -71,19 +73,42 @@ airplane = asb.Airplane(
     ]
 )
 
-airplane.export_cadquery_geometry(filename='airplane.stl')
+airplane.export_cadquery_geometry(filename='/root/airfoil-demo/airfoil-demo_local/tiny_gradio_demo/airplane.stl')
 
-# vlm = asb.VortexLatticeMethod(
-#     airplane=airplane, # 上面设置的模型
-#     op_point=asb.OperatingPoint(
-#         velocity=-25,  # 速度，m/s
-#         alpha=5,  # 迎角，角度制
-#     )
+airplane.draw_three_view()
+
+vlm = asb.VortexLatticeMethod(
+    airplane=airplane, # 上面设置的模型
+    op_point=asb.OperatingPoint(
+        velocity=-25,  # 速度，m/s
+        alpha=5,  # 迎角，角度制
+    )
+)
+
+
+aero = vlm.run()  # Returns a dictionary
+for k, v in aero.items():
+    print(f"{k.rjust(4)} : {v}")
+
+vlm.draw(show_kwargs=dict(jupyter_backend="static"))
+
+
+# # 三维可视化飞机模型
+# fig = plt.figure(figsize=(10, 7))
+# ax = fig.add_subplot(111, projection='3d')
+
+# # 绘制主翼
+# wing = airplane.wings[0]
+# wing.plot_3d(
+#     ax,
+#     color='blue',  # 主翼的颜色
 # )
 
+# # 设置图形参数
+# ax.set_xlabel("X (m)")
+# ax.set_ylabel("Y (m)")
+# ax.set_zlabel("Z (m)")
+# ax.set_title("Simple Airplane 3D Visualization")
 
-# aero = vlm.run()  # Returns a dictionary
-# for k, v in aero.items():
-#     print(f"{k.rjust(4)} : {v}")
-
-# vlm.draw(show_kwargs=dict(jupyter_backend="static"))
+# # 显示图形
+# plt.show()
